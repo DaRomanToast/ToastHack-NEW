@@ -1,6 +1,5 @@
 package com.armorhud.features;
 
-import com.armorhud.FriendList;
 import com.armorhud.events.UpdateListener;
 import com.armorhud.feature.Feature;
 import com.armorhud.setting.DecimalSetting;
@@ -16,24 +15,22 @@ import java.util.stream.StreamSupport;
 import static com.armorhud.Client.MC;
 
 public class AimBotFeature extends Feature implements UpdateListener {
-    private final FriendList friendList;
     private final DecimalSetting range = new DecimalSetting("range",  4, this);
     private final DecimalSetting speed = new DecimalSetting("speed", 1, this);
     private PlayerEntity target;
 
-    public AimBotFeature(FriendList friendList) {
+    public AimBotFeature() {
         super("AimAssist",  "Combat");
-        this.friendList = friendList;
     }
 
     @Override
     public void onEnable() {
-        DietrichEvents2.global().subscribe(UpdateListener.UpdateEvent.ID, this);
+        DietrichEvents2.global().subscribe(UpdateEvent.ID, this);
     }
 
     @Override
     public void onDisable() {
-        DietrichEvents2.global().unsubscribe(UpdateListener.UpdateEvent.ID, this);
+        DietrichEvents2.global().unsubscribe(UpdateEvent.ID, this);
     }
 
     @Override

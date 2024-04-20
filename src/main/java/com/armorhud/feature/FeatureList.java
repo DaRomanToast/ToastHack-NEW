@@ -58,6 +58,7 @@ public class FeatureList
 	public final AutoFishFeature autoFishFeature = new AutoFishFeature();
 	public final ReachFeature reachFeature = new ReachFeature();
 	public final XRayFeature xRayFeature = new XRayFeature();
+	public final AimBotFeature aimBotFeature = new AimBotFeature();
 	public final AutoGappleFeature autoGappleFeature = new AutoGappleFeature();
 	public final ShieldDisablerFeature shieldDisablerFeature = new ShieldDisablerFeature(friendList);
 	public final BoatExecutorFeature boatExecutorFeature = new BoatExecutorFeature();
