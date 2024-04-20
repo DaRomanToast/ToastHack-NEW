@@ -3,26 +3,31 @@ package com.armorhud.features;
 import com.armorhud.FriendList;
 import com.armorhud.events.UpdateListener;
 import com.armorhud.feature.Feature;
-import com.armorhud.setting.DecimalSetting;
+import com.armorhud.setting.BooleanSetting;
+import com.armorhud.setting.IntegerSetting;
 import com.armorhud.utils.RotationUtils;
 import com.armorhud.Rotation;
+import com.armorhud.utils.MathUtil;
 import de.florianmichael.dietrichevents2.DietrichEvents2;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.*;
 import net.minecraft.util.math.MathHelper;
 
 import java.util.Comparator;
 import java.util.stream.StreamSupport;
 
-import static com.armorhud.Client.MC;
+import static com.armorhud.ClientInitializer.mc;
 
 public class AimAssistFeature extends Feature implements UpdateListener {
-    private final FriendList friendList;
-    private final DecimalSetting range = new DecimalSetting("range",  4, this);
-    private final DecimalSetting speed = new DecimalSetting("speed", 1, this);
+
+    private FriendList friendList;
     private PlayerEntity target;
+    private final IntegerSetting speed = new IntegerSetting("speed", 5, this);
+    private final IntegerSetting range = new IntegerSetting("range", 6, this);
+    private final BooleanSetting requireWeapon  = new BooleanSetting("RequireWeapon wip keep false",false,this);
 
     public AimAssistFeature(FriendList friendList) {
-        super("AimAssist",  "Combat");
+        super("AimAssist", "Combat");
         this.friendList = friendList;
     }
 
@@ -38,45 +43,74 @@ public class AimAssistFeature extends Feature implements UpdateListener {
 
     @Override
     public void onUpdate() {
-        if (MC.currentScreen != null) {
-            return;
-        }
+        if (mc.currentScreen != null || !mc.player.isSprinting()) return;
+
+
         target = findNearestPlayer();
-        if (target != null) adjustPlayerRotationTowardsTarget();
+        if (target != null && checkConditions(target)) adjustPlayerRotationTowardsTarget();
     }
 
     private void adjustPlayerRotationTowardsTarget() {
         Rotation rotation = RotationUtils.getNeededRotations(RotationUtils.getEyesPos(), target.getBoundingBox().getCenter().add(0.0, 0.5, 0.0));
+        double distance = RotationUtils.getEyesPos().squaredDistanceTo(target.getBoundingBox().getCenter());
 
-        if (RotationUtils.getEyesPos().squaredDistanceTo(target.getBoundingBox().getCenter()) > range.getValue() * range.getValue()) return;
+        if (distance > Math.pow(range.getValue(), 2)) return;
+        double yawSpeed = speed.getValue() / 3.0;
+        double pitchSpeed = speed.getValue() / 4.5;
 
-        adjustYaw(rotation);
-        adjustPitch(rotation);
+        adjustYaw(rotation, yawSpeed);
+        adjustPitch(rotation, pitchSpeed);
     }
 
-    private void adjustYaw(Rotation rotation) {
-        float playerYaw = MC.player.getYaw();
-        double deltaAngle = MathHelper.wrapDegrees(rotation.getYaw() - playerYaw);
-        double toRotate = speed.getValue() * deltaAngle;
-        if ((toRotate >= 0 && toRotate > deltaAngle) || (toRotate < 0 && toRotate < deltaAngle)) toRotate = deltaAngle;
-        MC.player.setYaw(playerYaw + (float) toRotate);
+    private void adjustYaw(Rotation rotation, double maxSpeed) {
+        float currentYaw = mc.player.getYaw();
+        double targetYaw = rotation.getYaw();
+        double delta = MathHelper.wrapDegrees(targetYaw - currentYaw);
+
+        double smoothingFactor = 0.05;
+        double change = delta * smoothingFactor;
+
+        if (Math.abs(change) > maxSpeed) {
+            change = Math.signum(change) * maxSpeed;
+        }
+        mc.player.setYaw((float) (currentYaw + change));
     }
 
-    private void adjustPitch(Rotation rotation) {
-        float playerPitch = MC.player.getPitch();
-        double deltaAngle = MathHelper.wrapDegrees(rotation.getPitch() - playerPitch);
-        double toRotate = speed.getValue() * deltaAngle;
-        if ((toRotate >= 0 && toRotate > deltaAngle) || (toRotate < 0 && toRotate < deltaAngle)) toRotate = deltaAngle;
-        MC.player.setPitch(playerPitch + (float) toRotate);
+    private void adjustPitch(Rotation rotation, double maxSpeed) {
+        float currentPitch = mc.player.getPitch();
+        double targetPitch = rotation.getPitch();
+        double delta = MathHelper.wrapDegrees(targetPitch - currentPitch);
+
+        double smoothingFactor = 0.05;
+        double change = delta * smoothingFactor;
+
+        if (Math.abs(change) > maxSpeed) {
+            change = Math.signum(change) * maxSpeed;
+        }
+        mc.player.setPitch((float) (currentPitch + change));
+    }
+
+    private boolean checkConditions(PlayerEntity player) {
+        return (!requireWeapon.getValue() || isHoldingWeapon(player)) && withinDistance(player);
+    }
+
+    private boolean isHoldingWeapon(PlayerEntity player) {
+        Item item = player.getMainHandStack().getItem();
+        return item instanceof SwordItem || item instanceof AxeItem || item instanceof PickaxeItem || item instanceof HoeItem || item instanceof ShovelItem || item instanceof Item && item.equals(Items.TOTEM_OF_UNDYING);
+
+    }
+
+    private boolean withinDistance(PlayerEntity player) {
+        double distance = player.distanceTo(mc.player);
+        return distance <= range.getValue();
     }
 
     private PlayerEntity findNearestPlayer() {
-        return StreamSupport.stream(MC.world.getEntities().spliterator(), false)
+        return StreamSupport.stream(mc.world.getEntities().spliterator(), false)
                 .filter(e -> e instanceof PlayerEntity)
                 .map(e -> (PlayerEntity) e)
-                .filter(player -> player != MC.player)
-                .filter(player -> !player.isRemoved())
-                .min(Comparator.comparingDouble(player -> RotationUtils.getAngleToLookVec(player.getBoundingBox().getCenter().add(0.0, 0.5, 0.0))))
+                .filter(player -> player != mc.player)
+                .min(Comparator.comparingDouble(player -> player.distanceTo(mc.player)))
                 .orElse(null);
     }
 }
