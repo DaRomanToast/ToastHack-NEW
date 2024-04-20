@@ -68,6 +68,7 @@ public class FeatureList
 	public final StorageESPFeature storageESPFeature = new StorageESPFeature();
 	public final AutoSprintFeature autoSprintFeature = new AutoSprintFeature();
 	public final FreecamFeature freecamFeature = new FreecamFeature();
+	public final SpeedBridgeFeature speedBridgeFeature = new SpeedBridgeFeature();
 	public final DiscordNotifierFeature discordNotifierFeature = new DiscordNotifierFeature();
 	public final AntiDoubleTapFeature antiDoubleTapFeature = new AntiDoubleTapFeature();
 	public final ESPFeature espFeature = new ESPFeature();
