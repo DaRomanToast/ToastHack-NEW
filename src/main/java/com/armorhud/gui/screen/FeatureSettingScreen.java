@@ -3,6 +3,10 @@ package com.armorhud.gui.screen;
 import com.armorhud.Client;
 import com.armorhud.gui.Color;
 import com.armorhud.utils.ChatUtils;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import com.armorhud.feature.Feature;
 import com.armorhud.setting.Setting;
@@ -12,7 +16,15 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.Text;
 
+import java.io.*;
+import java.net.URI;
+import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.TreeMap;
 
 public class FeatureSettingScreen extends Screen {
