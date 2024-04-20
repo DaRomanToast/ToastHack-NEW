@@ -2,7 +2,9 @@ package com.armorhud.features;
 
 import com.armorhud.FriendList;
 import com.armorhud.events.UpdateListener;
-import com.armorhud.mixin.MoveHelper;
+import com.armorhud.setting.BooleanSetting;
+import com.armorhud.setting.DecimalSetting;
+import com.armorhud.setting.EnumSetting;
 import com.armorhud.setting.IntegerSetting;
 import de.florianmichael.dietrichevents2.DietrichEvents2;
 import net.minecraft.entity.Entity;
@@ -15,45 +17,40 @@ import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
 import org.lwjgl.glfw.GLFW;
 import com.armorhud.feature.Feature;
+import com.armorhud.mixin.MoveHelper;
 import com.armorhud.mixinterface.IMouse;
-import com.armorhud.setting.BooleanSetting;
-import com.armorhud.setting.DecimalSetting;
-import com.armorhud.setting.EnumSetting;
 
 import static com.armorhud.Client.MC;
-
-
 
 public class TriggerBotFeature extends Feature implements UpdateListener {
     private final FriendList friendList;
     private final EnumSetting<Mode> mode = new EnumSetting<>("mode",  Mode.values(), Mode.All, this);
     public DecimalSetting cooldown = new DecimalSetting("HitCooldown",  0.9, this);
     public IntegerSetting critDistance = new IntegerSetting("CritDistance", 3, this);
-
-    public  BooleanSetting attackInAir  = new BooleanSetting ("AttackInAir", true, this);
-    public  BooleanSetting attackOnJump = new BooleanSetting("AttackOnJump",  false, this);
+    public BooleanSetting attackInAir  = new BooleanSetting("AttackInAir", true, this);
+    public BooleanSetting attackOnJump = new BooleanSetting("AttackOnJump", false, this);
     private final BooleanSetting fakeCPS = new BooleanSetting("FakeCPS", true, this);
-    private final BooleanSetting autoCrit = new BooleanSetting("AutoCrit",  true, this);
-    public BooleanSetting immediateAttack = new BooleanSetting("ImmediateAttack",  false, this);
+    private final BooleanSetting autoCrit = new BooleanSetting("AutoCrit", true, this);
+    public BooleanSetting immediateAttack = new BooleanSetting("ImmediateAttack", false, this);
     private boolean firstAttackDone = false;
-    private final BooleanSetting activateOnLeftClick = new BooleanSetting("ActivateOnLeftClick",  false, this);
+    private final BooleanSetting activateOnLeftClick = new BooleanSetting("ActivateOnLeftClick", false, this);
+    private Entity lastTarget = null;
 
     public TriggerBotFeature(FriendList friendList) {
-        super("NiggerBeater", "Combat");
+        super("TriggerBot", "Combat");
         this.friendList = friendList;
     }
 
     @Override
-    protected void onEnable()
-    {
+    protected void onEnable() {
         DietrichEvents2.global().subscribe(UpdateListener.UpdateEvent.ID, this);
     }
 
     @Override
-    protected void onDisable()
-    {
+    protected void onDisable() {
         DietrichEvents2.global().unsubscribe(UpdateListener.UpdateEvent.ID, this);
         firstAttackDone = false;
+        lastTarget = null;
     }
 
     @Override
@@ -72,74 +69,64 @@ public class TriggerBotFeature extends Feature implements UpdateListener {
             return;
         }
         HitResult hit = MC.crosshairTarget;
-        assert hit != null;
-        if (hit.getType() != HitResult.Type.ENTITY) {
+
+        Entity currentTarget = hit instanceof EntityHitResult ? ((EntityHitResult) hit).getEntity() : null;
+        if (currentTarget != lastTarget) {
+            lastTarget = currentTarget;
+            firstAttackDone = false;
+        }
+
+        if (currentTarget == null) {
             return;
         }
+
+        if (!isValidEntity(currentTarget)) {
+            return;
+        }
+
         if (immediateAttack.getValue() && !firstAttackDone || MC.player.getAttackCooldownProgress(0) >= cooldown.getValue()) {
-            Entity target = ((EntityHitResult) hit).getEntity();
-            if (!isValidEntity(target)) {
-                return;
-            }
-            if (!target.isOnGround() && !attackInAir.getValue()) {
+            if (!currentTarget.isOnGround() && !attackInAir.getValue()) {
                 return;
             }
             if (MC.player.getY() > MC.player.prevY && !attackOnJump.getValue()) {
                 return;
             }
-            MC.interactionManager.attackEntity(MC.player, target);
+            MC.interactionManager.attackEntity(MC.player, currentTarget);
             MC.player.swingHand(Hand.MAIN_HAND);
             if (this.fakeCPS.getValue()) {
                 mouse.cwOnMouseButton(MC.getWindow().getHandle(), 0, 1, 0);
                 mouse.cwOnMouseButton(MC.getWindow().getHandle(), 0, 0, 0);
             }
-            if (!firstAttackDone) {
-                firstAttackDone = true;
-            }
-            if (MC.player.isOnGround() || MC.player.fallDistance >= critDistance.getValue() || this.hasFlyUtilities()) {
-                if (autoCrit.isEnabled() && !MC.player.isOnGround() && MoveHelper.hasMovement()) {
-                    assert MC.world != null;
-                    MC.world.sendPacket(new ClientCommandC2SPacket(MC.player, ClientCommandC2SPacket.Mode.STOP_SPRINTING));
-                }
-            }
+            firstAttackDone = true;
         }
     }
 
     private boolean isValidEntity(final Entity crossHairTarget) {
-        if (crossHairTarget instanceof PlayerEntity && friendList.isFriend((PlayerEntity) crossHairTarget)) {
-            return false;
-        }
-        if (crossHairTarget instanceof PlayerEntity) {
-            return true;
-        }
-        if (crossHairTarget instanceof SnowGolemEntity) {
-            return true;
-        }
-        return true;
+        return crossHairTarget instanceof PlayerEntity && !friendList.isFriend((PlayerEntity) crossHairTarget)
+                || crossHairTarget instanceof SnowGolemEntity
+                || !(crossHairTarget instanceof PlayerEntity);
     }
 
     private boolean hasFlyUtilities() {
         return MC.player.getAbilities().flying;
     }
 
-
     private enum Mode {
-        Sword,
-        All,
-        Any
+        Sword, All, Any
     }
 
     private boolean itemInHand() {
-        assert MC.player != null;
         final Item item = MC.player.getMainHandStack().getItem();
-        {
-            if (mode.getValue() == Mode.Sword)
+        switch (mode.getValue()) {
+            case Sword:
                 return item instanceof SwordItem;
-            if (mode.getValue() == Mode.All)
-                return item instanceof SwordItem || item instanceof AxeItem || item instanceof PickaxeItem || item instanceof HoeItem || item instanceof ShovelItem || item instanceof Item && item.equals(Items.TOTEM_OF_UNDYING);
-            if (mode.getValue() == Mode.Any);
-            return true;
+            case All:
+                return item instanceof SwordItem || item instanceof AxeItem || item instanceof PickaxeItem ||
+                        item instanceof HoeItem || item instanceof ShovelItem || item.equals(Items.TOTEM_OF_UNDYING);
+            case Any:
+                return true;
+            default:
+                return false;
         }
     }
 }
-
