@@ -25,9 +25,9 @@ import static com.armorhud.Client.MC;
 public class TriggerBotFeature extends Feature implements UpdateListener {
     private final FriendList friendList;
     private final EnumSetting<Mode> mode = new EnumSetting<>("mode",  Mode.values(), Mode.All, this);
-    public DecimalSetting cooldown = new DecimalSetting("HitCooldown",  0.9, this);
+    public DecimalSetting cooldown = new DecimalSetting("HitCooldown", 0.9, this);
     public IntegerSetting critDistance = new IntegerSetting("CritDistance", 3, this);
-    public BooleanSetting attackInAir  = new BooleanSetting("AttackInAir", true, this);
+    public BooleanSetting attackInAir = new BooleanSetting("AttackInAir", true, this);
     public BooleanSetting attackOnJump = new BooleanSetting("AttackOnJump", false, this);
     private final BooleanSetting fakeCPS = new BooleanSetting("FakeCPS", true, this);
     private final BooleanSetting autoCrit = new BooleanSetting("AutoCrit", true, this);
@@ -84,7 +84,7 @@ public class TriggerBotFeature extends Feature implements UpdateListener {
             return;
         }
 
-        if (immediateAttack.getValue() && !firstAttackDone || MC.player.getAttackCooldownProgress(0) >= cooldown.getValue()) {
+        if (immediateAttack.getValue() && !firstAttackDone || MC.player.getAttackCooldownProgress(0) >= cooldown.getValue() && !hasFlyUtilities()) {
             if (!currentTarget.isOnGround() && !attackInAir.getValue()) {
                 return;
             }
@@ -98,6 +98,11 @@ public class TriggerBotFeature extends Feature implements UpdateListener {
                 mouse.cwOnMouseButton(MC.getWindow().getHandle(), 0, 0, 0);
             }
             firstAttackDone = true;
+
+            if (autoCrit.getValue() && MC.player.fallDistance >= critDistance.getValue() && !MC.player.isOnGround() && !hasFlyUtilities()) {
+                MC.world.sendPacket(new ClientCommandC2SPacket(MC.player, ClientCommandC2SPacket.Mode.START_SPRINTING));
+                MC.world.sendPacket(new ClientCommandC2SPacket(MC.player, ClientCommandC2SPacket.Mode.STOP_SPRINTING));
+            }
         }
     }
 

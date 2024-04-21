@@ -59,41 +59,8 @@ public enum RenderUtils
 		drawBoxBoth(new Box(blockPos), fillColor, outlineColor, lineWidth, excludeDirs);
 	}
 
-/*	public static void renderText(Text text, Vec3d worldPosition, float scale, boolean seeThrough, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
-		MinecraftClient mc = MinecraftClient.getInstance();
-		EntityRenderDispatcher entityRenderDispatcher = mc.getEntityRenderDispatcher();
 
-		Vec3d cameraPos = mc.gameRenderer.getCamera().getPos();
-		double x = worldPosition.x - cameraPos.x;
-		double y = worldPosition.y - cameraPos.y;
-		double z = worldPosition.z - cameraPos.z;
 
-		matrices.push();
-
-		matrices.translate(x, y, z);
-		matrices.scale(-scale, -scale, scale);
-
-		// Adjust rotation towards the player
-		double d0 = Math.sqrt(x * x + z * z);
-		float yaw = (float)(Math.atan2(z, x) * (180D / Math.PI)) - 90.0F;
-		float pitch = (float)(-(Math.atan2(y, d0) * (180D / Math.PI)));
-		matrices.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(yaw));
-		matrices.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(pitch));
-
-		if (seeThrough) {
-			RenderSystem.disableDepthTest();
-		}
-
-		TextRenderer textRenderer = mc.textRenderer;
-		float textWidth = -textRenderer.getWidth(text) / 2f;
-		textRenderer.draw(matrices, text, textWidth, 0, 0xFFFFFF, false, 0, vertexConsumers, seeThrough ? 0 : light);
-
-		if (seeThrough) {
-			RenderSystem.enableDepthTest();
-		}
-
-		matrices.pop();
-	}*/
 	public static class R3D {
 		public static void renderFilled(Vec3d start, Vec3d dimensions, Color color, MatrixStack stack) {
 			renderFilled(start, dimensions, color, stack, GL11.GL_ALWAYS);
@@ -214,6 +181,35 @@ public enum RenderUtils
 			BufferRenderer.drawWithGlobalProgram(buffer.end());
 			GL11.glDepthFunc(GL11.GL_LEQUAL);
 			end(matrices);
+		}
+		public static void renderCircle(Vec3d pos, double radius, int color, int segments, MatrixStack matrices) {
+			RenderSystem.enableBlend();
+			RenderSystem.defaultBlendFunc();
+			RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+
+			Matrix4f matrix = matrices.peek().getPositionMatrix();
+			float red = (color >> 16 & 255) / 255.0F;
+			float green = (color >> 8 & 255) / 255.0F;
+			float blue = (color & 255) / 255.0F;
+			float alpha = (color >> 24 & 255) / 255.0F;
+
+			BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
+			bufferBuilder.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
+
+			double increment = 2.0 * Math.PI / segments;
+			for (int i = 0; i < segments; i++) {
+				double angle = i * increment;
+				double nextAngle = (i + 1) * increment;
+				double x = pos.x + radius * Math.cos(angle);
+				double z = pos.z + radius * Math.sin(angle);
+				double nextX = pos.x + radius * Math.cos(nextAngle);
+				double nextZ = pos.z + radius * Math.sin(nextAngle);
+
+				bufferBuilder.vertex(matrix, (float) x, (float) pos.y, (float) z).color(red, green, blue, alpha).next();
+				bufferBuilder.vertex(matrix, (float) nextX, (float) pos.y, (float) nextZ).color(red, green, blue, alpha).next();
+			}
+			BufferRenderer.draw(bufferBuilder.end());
+			RenderSystem.disableBlend();
 		}
 		public static void renderOutline(Vec3d start, Vec3d dimensions, Color color, MatrixStack stack) {
 			float red = color.getRed() / 255f;
