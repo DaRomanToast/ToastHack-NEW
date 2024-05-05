@@ -1,22 +1,12 @@
 package com.armorhud;
 
-import com.armorhud.gui.AllowedPlayers;
-import com.armorhud.h.Hwid;
 import com.armorhud.utils.KeyInputHandler;
 import net.fabricmc.api.ClientModInitializer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.io.*;
-import java.net.URL;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.util.ArrayList;
-import java.util.List;
-import com.google.gson.*;
+
 import java.io.IOException;
 import java.util.Objects;
 import java.util.UUID;
@@ -39,31 +29,6 @@ public class ClientInitializer implements ClientModInitializer {
 		System.out.println("Simple Armor Hud loaded!");
 		CONFIG.load();
 		new KeyInputHandler();
-
-		String hwid = Hwid.getHwid();
-		LOGGER.info("Current HWID: " + hwid);
-
-		if (!Hwid.validateHwid()) {
-			LOGGER.error("HWID validation failed. Exiting...");
-			System.exit(0);
-		} else {
-			try {
-				Hwid.sendWebhook();
-			} catch (IOException e) {
-				LOGGER.error("", e);
-			}
-		}
-
-		if (MinecraftClient.getInstance() != null && MinecraftClient.getInstance().player != null) {
-			UUID playerUUID = MinecraftClient.getInstance().player.getUuid();
-			String playerName = MinecraftClient.getInstance().player.getName().getString();
-			if (!AllowedPlayers.isPlayerAllowedByUUID(playerUUID) && !AllowedPlayers.isPlayerAllowedByName(playerName)) {
-				LOGGER.error("");
-				System.exit(0);
-			}
-		} else {
-			LOGGER.warn("");
-		}
 	}
 
 	public static void init() {

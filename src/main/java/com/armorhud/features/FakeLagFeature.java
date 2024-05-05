@@ -51,7 +51,7 @@ public class FakeLagFeature extends Feature implements UpdateListener {
             MatrixStack matrixStack = new MatrixStack();
             Vec3d position = new Vec3d(100, 75, 100);
             int color = 0xFFFF0000;
-            RenderUtils.renderCircle(position, 5.0, color, 36, matrixStack);
+   //         RenderUtils.renderCircle(position, 5.0, color, 36, matrixStack);
         }
     }
 
@@ -67,7 +67,7 @@ public class FakeLagFeature extends Feature implements UpdateListener {
 
     private void flushPackets() {
         while (!packets.isEmpty()) {
-            PacketUtil.sendPacket(packets.poll());
+ //           PacketUtil.sendPacket(packets.poll());
         }
     }
 }

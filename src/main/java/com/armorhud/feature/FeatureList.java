@@ -31,6 +31,7 @@ public class FeatureList
 	public final NoJumpDelayFeature noJumpDelayFeature = new NoJumpDelayFeature();
 	public final NoFallFeature NoFallFeature = new NoFallFeature();
 	//blatant
+	public final AimBotFeature aimBotFeature = new AimBotFeature();
 	public final FriendList friendList = new FriendList();
 	public final TriggerBotFeature triggerBotFeature = new TriggerBotFeature(friendList);
 	public final ElytraBoostFeature elytraBoostFeature = new ElytraBoostFeature();
@@ -45,6 +46,7 @@ public class FeatureList
 	public final AutoMineCartFeature autoMineCartFeature = new AutoMineCartFeature();
 	public final AutoLootFeature autoLootFeature = new AutoLootFeature();
 	public final AutoWTapFeature autoWTapFeature = new AutoWTapFeature();
+	public final AutoObsidianCrystalFeature AutoObsidianCrystalFeature = new AutoObsidianCrystalFeature();
 	public final AntiCrystalBounceFeature antiCrystalBounceFeature = new AntiCrystalBounceFeature();
 	public final CameraNoClipFeature cameraNoClipFeature = new CameraNoClipFeature();
 	public final LegitCrystalFeature legitCrystalFeature = new LegitCrystalFeature();
@@ -58,7 +60,7 @@ public class FeatureList
 	public final AutoFishFeature autoFishFeature = new AutoFishFeature();
 	public final ReachFeature reachFeature = new ReachFeature();
 	public final XRayFeature xRayFeature = new XRayFeature();
-	public final AimBotFeature aimBotFeature = new AimBotFeature();
+
 	public final AutoGappleFeature autoGappleFeature = new AutoGappleFeature();
 	public final ShieldDisablerFeature shieldDisablerFeature = new ShieldDisablerFeature(friendList);
 	public final BoatExecutorFeature boatExecutorFeature = new BoatExecutorFeature();

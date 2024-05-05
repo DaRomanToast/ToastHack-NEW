@@ -1,9 +1,7 @@
 package com.armorhud.gui.screen;
 
-import com.armorhud.gui.AllowedPlayers;
 import com.armorhud.setting.Setting;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.render.BufferBuilder;
@@ -69,15 +67,6 @@ public class GuiScreen extends Screen {
 
 	@Override
 	public void init() {
-		UUID playerUUID = MinecraftClient.getInstance().player.getUuid();
-		String playerName = MinecraftClient.getInstance().player.getName().getString();
-
-
-		if (!AllowedPlayers.isPlayerAllowedByUUID(playerUUID) && !AllowedPlayers.isPlayerAllowedByName(playerName)) {
-			MinecraftClient.getInstance().player.sendMessage(Text.of("fuck off leaking nigga ur ratted i have ur shit fucking fat nigger"), false);
-			MinecraftClient.getInstance().setScreen(null);
-			return;
-		}
 		searchText = new TextFieldWidget(MC.textRenderer, width / 2 - 75, 25, 150, 20, Text.of(""));
 		addSelectableChild(searchText);
 		setInitialFocus(searchText);
