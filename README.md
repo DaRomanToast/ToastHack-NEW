@@ -11,7 +11,7 @@ A brain is required to know how to set up and open a source code
 
 ## Devs/Contributors
 
-Our Devs are Don Toast, DaRomanLove, and EDest10.
+Our Devs are dontoast(DaRomanToast), DaRomanLove, and EDest10.
 
 ## License
 
